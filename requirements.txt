@@ -1,0 +1,8 @@
+# Generado a partir de las librerías usadas en el pipeline.
+# Para versiones exactas y reproducibilidad total, corré:
+#   pip freeze > requirements.txt
+# dentro de tu entorno virtual (.venv) y reemplazá este archivo por esa salida.
+pandas
+scikit-learn
+spacy
+matplotlib
