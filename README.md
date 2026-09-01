@@ -1,12 +1,12 @@
-# Pre-entrega 3 — Clasificador Supervisado con TF-IDF
+Pre-entrega 3 — Clasificador Supervisado con TF-IDF
 
-## Data Science III
+Data Science III
 
 Implementación de un pipeline de clasificación supervisada de textos utilizando TF-IDF y Linear SVM sobre el dataset AG News.
 
----
+⸻
 
-## 1. Objetivo
+1. Objetivo
 
 El objetivo de esta pre-entrega es construir un pipeline completo capaz de transformar noticias en texto en predicciones de categorías utilizando técnicas clásicas de Machine Learning para NLP.
 
@@ -14,53 +14,57 @@ El pipeline integra:
 
 1. Carga del dataset AG News.
 2. Preprocesamiento del texto.
-3. Lematización con SpaCy.
+3. Tokenización y lematización con SpaCy.
 4. Vectorización mediante TF-IDF.
 5. Entrenamiento de un clasificador Linear SVM.
 6. Evaluación mediante Accuracy, Precision, Recall y F1-Score.
 7. Generación de una matriz de confusión.
+8. Experimentación con diferentes configuraciones de TF-IDF.
 
 Este trabajo continúa el pipeline desarrollado en los módulos anteriores y utiliza el mismo corpus AG News.
 
----
+⸻
 
-## 2. Dataset
+2. Dataset
 
-Se utiliza el dataset **AG News**, compuesto por noticias en inglés clasificadas en cuatro categorías:
+Se utiliza el dataset AG News, compuesto por noticias en inglés clasificadas en cuatro categorías:
 
-- World
-- Sports
-- Business
-- Sci_Tech
+* World
+* Sports
+* Business
+* Sci_Tech
 
 Para esta implementación se mantienen separados los conjuntos de entrenamiento y prueba:
 
-```text
 ag_news_train.csv
 ag_news_test.csv
-```
 
-### Distribución del dataset
+Distribución del dataset
 
-**Train**
+Train
 
-| Categoría | Documentos |
-|---|---|
-| World | 2000 |
-| Sports | 2000 |
-| Business | 2000 |
-| Sci_Tech | 2000 |
-| **Total** | **8000** |
+Categoría	Documentos
+World	2000
+Sports	2000
+Business	2000
+Sci_Tech	2000
+Total	8000
 
-**Test**
+Test
 
 El conjunto de prueba contiene 2000 documentos, con 500 documentos por categoría.
 
----
+Categoría	Documentos
+World	500
+Sports	500
+Business	500
+Sci_Tech	500
+Total	2000
 
-## 3. Estructura del proyecto
+⸻
 
-```
+3. Estructura del proyecto
+
 Data_Science_III_Vitcopp_preentrega3/
 │
 ├── data/
@@ -86,249 +90,318 @@ Data_Science_III_Vitcopp_preentrega3/
 │
 ├── requirements.txt
 └── README.md
-```
 
----
+⸻
 
-## 4. Preprocesamiento
+4. Preprocesamiento
 
 El preprocesamiento reutiliza la lógica desarrollada durante el Módulo 2.
 
 Se aplican las siguientes etapas:
 
-**Normalización**
+Normalización
+
 El texto se convierte a minúsculas para evitar diferencias entre palabras equivalentes.
 
-**Limpieza mediante expresiones regulares**
+Limpieza mediante expresiones regulares
+
 Se eliminan:
-- URLs.
-- Etiquetas HTML.
-- Caracteres no alfabéticos.
-- Espacios innecesarios.
 
-**Tokenización y lematización**
-Se utiliza el modelo `en_core_web_sm` de SpaCy. La lematización permite reducir distintas formas de una palabra a una representación común (por ejemplo, diferentes formas verbales se normalizan a su lema correspondiente).
+* URLs.
+* Etiquetas HTML.
+* Caracteres no alfabéticos.
+* Espacios innecesarios.
 
----
+Tokenización y lematización
 
-## 5. Vectorización TF-IDF
+Se utiliza el modelo en_core_web_sm de SpaCy.
 
-Para convertir los documentos en una representación numérica se utiliza:
+La lematización permite reducir distintas formas de una palabra a una representación común, facilitando que palabras con diferentes formas gramaticales puedan ser tratadas como una misma unidad léxica.
 
-```python
+⸻
+
+5. Vectorización TF-IDF
+
+Para convertir los documentos en una representación numérica se utiliza la siguiente configuración final:
+
 TfidfVectorizer(
     max_features=30000,
     ngram_range=(1, 2)
 )
-```
 
-**max_features**
-Se estableció `max_features = 30000`. Esto limita el vocabulario utilizado por el modelo a las 20.000 características más relevantes según el vectorizador, controlando el tamaño de la matriz y el costo computacional.
+max_features
 
-**ngram_range**
-Se utilizó `ngram_range = (1, 2)`, incorporando:
-- Unigramas: palabras individuales.
-- Bigramas: pares consecutivos de palabras.
+Se estableció:
 
-De esta manera, el modelo puede capturar tanto información individual como determinadas relaciones entre palabras.
+max_features = 30000
 
----
+Esto limita el vocabulario utilizado por el modelo a un máximo de 30.000 características, reduciendo la dimensionalidad de la representación TF-IDF y controlando el costo computacional.
 
-## 6. Prevención de Data Leakage
+ngram_range
 
-Se mantuvo estrictamente separada la información de entrenamiento y prueba. El vectorizador se ajusta exclusivamente sobre el conjunto de entrenamiento:
+Se utilizó:
 
-```python
+ngram_range = (1, 2)
+
+Esto incorpora:
+
+* Unigramas: palabras individuales.
+* Bigramas: pares consecutivos de palabras.
+
+De esta manera, el modelo puede capturar tanto información asociada a palabras individuales como determinadas relaciones entre palabras.
+
+⸻
+
+6. Prevención de Data Leakage
+
+Se mantuvo estrictamente separada la información de entrenamiento y prueba.
+
+El vectorizador se ajusta exclusivamente sobre el conjunto de entrenamiento:
+
 X_train_tfidf = vectorizer.fit_transform(X_train)
-```
 
 Luego se utiliza el mismo vectorizador para transformar el conjunto de prueba:
 
-```python
 X_test_tfidf = vectorizer.transform(X_test)
-```
 
-No se realiza `fit` sobre el conjunto de test, evitando que su vocabulario influya en el entrenamiento del modelo.
+No se realiza fit sobre el conjunto de test, evitando que información del conjunto de prueba influya en la construcción del vocabulario o en el entrenamiento del modelo.
 
----
+⸻
 
-## 7. Modelo utilizado
+7. Modelo utilizado
 
-Se seleccionó **Linear SVM (`LinearSVC`)** como modelo de referencia.
+Se seleccionó Linear SVM (LinearSVC) como modelo de clasificación.
 
-La elección se debe a que los clasificadores lineales funcionan adecuadamente sobre representaciones TF-IDF de alta dimensionalidad y matrices dispersas, características habituales en problemas de clasificación de texto. Además, Linear SVM permite establecer un baseline sólido para comparar posteriormente con modelos de Deep Learning.
+Los clasificadores lineales son especialmente adecuados para representaciones TF-IDF de alta dimensionalidad y matrices dispersas, características habituales en problemas de clasificación de texto.
 
-```python
+Además, Linear SVM permite establecer un baseline sólido para comparar posteriormente con modelos de Deep Learning.
+
+La implementación utiliza:
+
 model = LinearSVC()
-```
 
----
+⸻
 
-## 8. Entrenamiento
+8. Entrenamiento
 
-El modelo se entrenó utilizando exclusivamente las representaciones TF-IDF del conjunto de entrenamiento:
+El modelo se entrenó utilizando exclusivamente las representaciones TF-IDF correspondientes al conjunto de entrenamiento:
 
-```python
 model.fit(X_train_tfidf, y_train)
-```
 
-Posteriormente se realizaron predicciones sobre el conjunto de test:
+Posteriormente se realizaron predicciones sobre el conjunto de prueba:
 
-```python
 y_pred = model.predict(X_test_tfidf)
-```
 
----
+⸻
 
-## 9. Resultados
+9. Resultados del modelo final
 
-El modelo obtuvo:
+La configuración final obtuvo:
 
-**Accuracy = 0.8935**
+* Accuracy: 0.8935
+* F1 Macro: 0.8934
+* Características: 30.000
+* N-gramas: (1, 2)
 
-Es decir, aproximadamente un 89% de las noticias del conjunto de prueba fueron clasificadas correctamente.
+Esto significa que el modelo clasificó correctamente aproximadamente el 89,35% de las noticias del conjunto de prueba.
 
-### Classification Report
+Sobre 2.000 documentos de test, esto equivale a aproximadamente 1.787 documentos correctamente clasificados.
 
-| Categoría     | Precision |   Recall | F1-Score |
-| ------------- | --------: | -------: | -------: |
-| Business      |      0.84 |     0.87 |     0.86 |
-| Sci_Tech      |      0.88 |     0.86 |     0.87 |
-| Sports        |      0.94 |     0.96 |     0.95 |
-| World         |      0.91 |     0.88 |     0.89 |
-| **Macro avg** |  **0.89** | **0.89** | **0.89** |
+Classification Report
 
+Categoría	Precision	Recall	F1-Score	Support
+Business	0.84	0.87	0.86	500
+Sci_Tech	0.88	0.86	0.87	500
+Sports	0.94	0.96	0.95	500
+World	0.91	0.88	0.89	500
+Macro avg	0.89	0.89	0.89	2000
+Weighted avg	0.89	0.89	0.89	2000
 
----
+⸻
 
-## 10. Análisis de resultados
+10. Análisis de resultados
 
-La categoría con mejor desempeño fue **Sports**, con Precision 0.94, Recall 0.96 y F1-Score 0.95. Esto indica que las noticias deportivas presentan patrones léxicos relativamente diferenciados del resto de las categorías.
+La categoría con mejor desempeño fue Sports, con:
 
-La categoría con menor F1-Score fue **Business**, con F1-Score 0.85. Por lo tanto, Business presenta una mayor dificultad de clasificación.
+* Precision: 0.94
+* Recall: 0.96
+* F1-Score: 0.95
 
----
+Esto indica que las noticias deportivas presentan patrones léxicos relativamente diferenciados respecto de las demás categorías, facilitando su identificación por parte del clasificador.
 
-## 11. Matriz de confusión
+La categoría con menor F1-Score fue Business, con un valor de 0.86. Esto indica una mayor dificultad para diferenciar algunas noticias empresariales de categorías como Sci_Tech y World.
+
+En términos generales, el modelo presenta un desempeño equilibrado entre las cuatro categorías, con métricas cercanas al 0.90.
+
+⸻
+
+11. Matriz de confusión
+
+La matriz de confusión obtenida fue:
 
               Business  Sci_Tech  Sports  World
-
 Business          435        37       8      20
 Sci_Tech           46       432       9      13
 Sports              4         6     482       8
 World              30        17      15     438
 
-### Interpretación
+Interpretación
 
-El principal foco de confusión se encuentra entre:
+La matriz muestra que:
 
-- Sci_Tech → Business = 46
-- Business → Sci_Tech = 37
+* 435 de 500 noticias Business fueron correctamente clasificadas.
+* 432 de 500 noticias Sci_Tech fueron correctamente clasificadas.
+* 482 de 500 noticias Sports fueron correctamente clasificadas.
+* 438 de 500 noticias World fueron correctamente clasificadas.
 
-Esto indica que ambas categorías comparten determinados patrones léxicos relacionados con tecnología, empresas, productos e industria.
+El principal foco de confusión corresponde a:
+
+* Sci_Tech → Business: 46 documentos.
+* Business → Sci_Tech: 37 documentos.
+
+Esto indica que existe cierta similitud léxica entre ambas categorías. Las noticias relacionadas con tecnología, empresas, productos e industria pueden compartir vocabulario y dificultar la separación entre Business y Sci_Tech.
 
 También se observa cierta confusión entre World y Business:
 
-- World → Business = 29
-- Business → World = 23
+* World → Business: 30 documentos.
+* Business → World: 20 documentos.
 
-En contraste, **Sports** presenta pocos errores y concentra 481 de sus 500 documentos correctamente clasificados.
+En contraste, Sports presenta el menor nivel de confusión con las demás categorías, con solo 18 documentos incorrectamente clasificados.
 
----
+⸻
 
-## 12. Experimentación con parámetros del vectorizador
+12. Experimentación con parámetros del vectorizador
 
-La configuración final seleccionada es max_features=30000 y ngram_range=(1,2), ya que obtuvo el mejor desempeño entre las configuraciones evaluadas, alcanzando un Accuracy de 0.8935 y un F1 Macro de 0.8934.
+Para seleccionar la configuración final se realizaron cinco experimentos modificando:
 
-| max_features | ngram_range | Características reales | Accuracy | F1 macro | Tiempo (s) |
-|---|---|---|---|---|---|
-| 5000 | (1, 1) | 5000 | 0.8795 | 0.8795 | 0.29 |
-| 10000 | (1, 1) | 10000 | 0.8855 | 0.8855 | 0.19 |
-| 10000 | (1, 2) | 10000 | 0.8860 | 0.8859 | 0.56 |
-| **20000** | **(1, 2)** | **20000** | **0.8900** | **0.8899** | **0.58** |
-| 30000 | (1, 2) | 30000 | 0.8935 | 0.8934 | 0.57 |
+* Cantidad máxima de características (max_features).
+* Rango de n-gramas (ngram_range).
 
-*Tabla completa disponible en `outputs/experimentos_tfidf.csv`.*
+Las configuraciones evaluadas fueron:
 
-**Lectura de los resultados:**
+#	max_features	ngram_range	Características reales	Accuracy	F1 Macro	Tiempo (s)
+1	5000	(1, 1)	5000	0.8795	0.8795	0.29
+2	10000	(1, 1)	10000	0.8855	0.8855	0.19
+3	10000	(1, 2)	10000	0.8860	0.8859	0.56
+4	20000	(1, 2)	20000	0.8900	0.8899	0.58
+5	30000	(1, 2)	30000	0.8935	0.8934	0.57
 
-- **Incorporar bigramas ayuda:** con `max_features=10000` fijo, agregar bigramas (`(1,2)` vs `(1,1)`) sube el accuracy de 0.8855 a 0.8860. La mejora es modesta pero consistente con la intuición de que frases como "new york" o "united states" aportan señal que los unigramas solos no capturan.
-- **Más vocabulario ayuda, con retornos decrecientes:** subir de 5000 a 20000 features aporta +1.05 puntos de accuracy (0.8795 → 0.8900), pero subir de 20000 a 30000 solo suma +0.35 puntos adicionales (0.8900 → 0.8935), a cambio de un 50% más de memoria en la matriz TF-IDF y sin diferencia relevante en tiempo de entrenamiento.
-- **Elección final:** se mantiene `max_features=20000, ngram_range=(1, 2)` como configuración reportada en las Secciones 9-11, por ofrecer el mejor equilibrio entre desempeño y tamaño del vocabulario. La configuración con 30000 features queda documentada como una alternativa válida si se prioriza exclusivamente el accuracy por sobre el costo de memoria — por ejemplo, si el corpus creciera significativamente en módulos posteriores.
+La tabla completa se encuentra disponible en outputs/experimentos_tfidf.csv.
 
----
+Análisis de los experimentos
 
-## 13. Conclusión
+Incorporación de bigramas
+
+Manteniendo max_features=10000, incorporar bigramas produjo una pequeña mejora:
+
+Unigramas:          Accuracy = 0.8855
+Unigramas + bigramas: Accuracy = 0.8860
+
+La mejora es modesta, pero indica que los bigramas aportan información adicional respecto del uso exclusivo de palabras individuales.
+
+Aumento de la cantidad de características
+
+Se observa una mejora progresiva al aumentar el número de características:
+
+5000 features  → 0.8795
+10000 features → 0.8860
+20000 features → 0.8900
+30000 features → 0.8935
+
+El incremento de 5.000 a 30.000 características permite mejorar el Accuracy en 1,40 puntos porcentuales.
+
+La mejora más importante se produce al pasar de 5.000 a 10.000 características, mientras que los incrementos posteriores generan mejoras más pequeñas.
+
+Selección de la configuración final
+
+La mejor configuración evaluada fue:
+
+max_features = 30000
+ngram_range = (1, 2)
+
+Esta configuración obtuvo:
+
+Accuracy = 0.8935
+F1 Macro  = 0.8934
+
+Por lo tanto, se selecciona como configuración final del clasificador al presentar el mejor desempeño entre las alternativas evaluadas.
+
+⸻
+
+13. Conclusión
 
 El pipeline desarrollado permite transformar el corpus AG News en una representación numérica mediante TF-IDF y utilizarla para realizar clasificación supervisada con Linear SVM.
 
-El modelo alcanzó un Accuracy de 89%, demostrando que TF-IDF combinado con un clasificador lineal constituye un baseline sólido para este problema.
+El modelo final alcanzó un Accuracy de 89,35% y un F1 Macro de 89,34%, demostrando que TF-IDF combinado con un clasificador lineal constituye un baseline sólido para este problema de clasificación de textos.
 
-La principal dificultad aparece en la separación entre Business y Sci_Tech, mientras que Sports presenta el mejor desempeño. Esto puede explicarse por la existencia de vocabulario compartido entre noticias empresariales y tecnológicas.
+La categoría con mejor desempeño fue Sports, con un F1-Score de 0.95, mientras que Business presentó el menor F1-Score, con 0.86.
 
-El experimento también demuestra la importancia de mantener separado el proceso de vectorización entre entrenamiento y prueba. El `TfidfVectorizer` se ajustó únicamente sobre train y posteriormente se utilizó `transform` sobre test, evitando Data Leakage.
+La matriz de confusión muestra que las principales dificultades se encuentran en la diferenciación entre Business y Sci_Tech, debido a la existencia de vocabulario compartido entre noticias empresariales y tecnológicas.
 
-Estos resultados proporcionan una línea base cuantitativa para comparar posteriormente el desempeño de modelos de Deep Learning.
+La experimentación con diferentes configuraciones de TF-IDF permitió comprobar que tanto el aumento de la cantidad de características como la incorporación de bigramas pueden mejorar el desempeño del modelo. La mejor configuración evaluada fue de 30.000 características con unigramas y bigramas.
 
----
+Además, se mantuvo correctamente separado el conjunto de entrenamiento del conjunto de prueba. El TfidfVectorizer fue ajustado únicamente sobre train mediante fit_transform() y posteriormente aplicado sobre test mediante transform(), evitando Data Leakage.
 
-## 14. Archivos de salida
+Estos resultados proporcionan una línea base cuantitativa para comparar posteriormente el desempeño de modelos de Deep Learning sobre el mismo corpus.
 
-El pipeline genera automáticamente:
+⸻
 
-```
+14. Archivos de salida
+
+El pipeline genera automáticamente los siguientes archivos:
+
 outputs/matriz_confusion.png
 outputs/classification_report.csv
 outputs/experimentos_tfidf.csv
-```
 
-Los resultados obtenidos permiten conservar evidencia reproducible del proceso de evaluación.
+Estos archivos permiten conservar evidencia reproducible del proceso de evaluación y de la experimentación realizada.
 
----
+⸻
 
-## 15. Requisitos
+15. Requisitos
 
 Las principales librerías utilizadas son:
 
-- Python
-- pandas
-- scikit-learn
-- SpaCy
-- matplotlib
+* Python
+* pandas
+* scikit-learn
+* SpaCy
+* matplotlib
 
-Instalación:
+Para instalar las dependencias:
 
-```bash
 pip install -r requirements.txt
+
+Luego instalar el modelo de idioma de SpaCy:
+
 python -m spacy download en_core_web_sm
-```
 
----
+⸻
 
-## 16. Ejecución
+16. Ejecución
 
 Activar el entorno virtual:
 
-```bash
 source .venv/bin/activate
-```
 
-Ejecutar el clasificador:
+Ejecutar el clasificador final:
 
-```bash
 python src/clasificador_tfidf.py
-```
 
-Ejecutar la comparación de hiperparámetros del vectorizador:
+Ejecutar los experimentos de TF-IDF:
 
-```bash
 python src/experimentos_tfidf.py
-```
 
-El programa carga los datasets, realiza el preprocesamiento, genera las representaciones TF-IDF, entrena el modelo, calcula las métricas y genera la matriz de confusión.
+El programa carga los datasets, realiza el preprocesamiento, genera las representaciones TF-IDF, entrena el modelo, calcula las métricas y genera los archivos de resultados.
 
----
+⸻
 
-## 17. Continuidad del proyecto
+17. Continuidad del proyecto
 
-Este trabajo utiliza el mismo corpus AG News seleccionado en el Módulo 2. El dataset y el pipeline serán utilizados como base para los siguientes módulos y el Proyecto Final. La separación entre train y test se mantiene para garantizar una evaluación correcta del modelo.
+Este trabajo utiliza el mismo corpus AG News seleccionado en el Módulo 2.
+
+El dataset y el pipeline desarrollado serán utilizados como base para los siguientes módulos y el Proyecto Final.
+
+La separación entre los conjuntos de entrenamiento y prueba se mantiene para garantizar una evaluación correcta del modelo y permitir comparaciones consistentes con futuras implementaciones.
+
+El modelo TF-IDF + Linear SVM funciona como baseline de Machine Learning clásico, sobre el cual podrán compararse posteriormente modelos de Deep Learning y otras técnicas de representación de texto.
